@@ -2,13 +2,13 @@ const Engine = Matter.Engine;
 const World= Matter.World;
 const Bodies = Matter.Bodies;
 const Constraint = Matter.Constraint;
-
+var numberOfTries = 3;
 var engine, world;
 var box1, pig1,pig3;
 var backgroundImg,platform;
-var bird, slingshot;
+var bird, slingshot, t;
 
-var gameState = "onSling";
+var gameState = "attatched";
 var bg = "sprites/bg1.png";
 var score = 0;
 
@@ -21,9 +21,12 @@ function setup(){
     engine = Engine.create();
     world = engine.world;
 
+    t = false;
+
 
     ground = new Ground(600,height,1200,20);
     platform = new Ground(150, 305, 300, 170);
+    World.add(world, Bodies.rectangle(600, -100, 1200, 200,{isStatic:true}));
 
     box1 = new Box(700,320,70,70);
     box2 = new Box(920,320,70,70);
@@ -73,7 +76,9 @@ function draw(){
     box5.display();
     log4.display();
     log5.display();
-
+    if(t && gameState == "attatched"){
+        Matter.Body.setPosition(bird.body, {x: mouseX , y: mouseY});
+    }
     bird.display();
     platform.display();
     //log6.display();
@@ -81,20 +86,27 @@ function draw(){
 }
 
 function mouseDragged(){
-    //if (gameState!=="launched"){
-        Matter.Body.setPosition(bird.body, {x: mouseX , y: mouseY});
-    //}
+        t = true;
+    gameState = "released"   
 }
 
 
 function mouseReleased(){
+    t = false;
     slingshot.fly();
-    gameState = "launched";
+
 }
 
 function keyPressed(){
-    if(keyCode === 32){
+    if(keyCode === 32 && gameState == "released" && numberOfTries >1 && (bird.body.speed < 0.5 || 
+        ((bird.body.position.x > 1200 || bird.body.position.x < 0) &&
+         (bird.body.position.y > 400 || bird.body.position.y < 0)))){
+        Matter.Body.setPosition(bird.body, {x: 200 , y: 50});
+        Matter.Body.setVelocity(bird.body, {x: 0, y: 0})
        slingshot.attach(bird.body);
+       gameState = "attatched";
+       numberOfTries --;
+       bird.trajectory = [];
     }
 }
 
